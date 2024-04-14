@@ -1,5 +1,6 @@
 from app import db
 from models.base import BaseModel
+from models.category import CategoryModel
 
 
 class GroupCategoryModel(db.Model, BaseModel):

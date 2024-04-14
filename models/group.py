@@ -1,5 +1,7 @@
 from app import db
 from models.base import BaseModel
+from models.group_category import GroupCategoryModel
+from models.user import UserModel
 
 
 class GroupModel(db.Model, BaseModel):
