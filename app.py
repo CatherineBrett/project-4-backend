@@ -17,6 +17,7 @@ db = SQLAlchemy(app)
 
 marsh = Marshmallow(app)
 
-from controllers import groups
+from controllers import groups, users
 
 app.register_blueprint(groups.router, url_prefix="/api")
+app.register_blueprint(users.router, url_prefix="/api")
