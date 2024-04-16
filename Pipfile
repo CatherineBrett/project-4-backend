@@ -9,6 +9,8 @@ flask-sqlalchemy = "*"
 psycopg2-binary = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
+flask-bcrypt = "*"
+pyjwt = "*"
 
 [dev-packages]
 

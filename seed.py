@@ -12,12 +12,10 @@ with app.app_context():
 
     print("Seeding the database...")
 
-    # TO-DO: Password hashing on User model
-
     cbrett = UserModel(
         username="cbrett",
         email="cbrett@geemail.com",
-        password_hash="bciubvrubvR&89ncncohbvosrjr",
+        password="P@ssword1!",
     )
     cbrett.save()
 
