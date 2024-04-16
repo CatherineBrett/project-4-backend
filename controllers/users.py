@@ -44,3 +44,23 @@ def log_in():
     token = jwt.encode(payload, SECRET, algorithm="HS256")
 
     return {"message": "Login successful!", "token": token}
+
+
+# TO-DO: Permissions
+@router.route("/users/<int:user_id>", methods=["PUT"])
+def update_user(user_id):
+    user_dictionary = request.json
+    user_to_update = UserModel.query.get(user_id)
+
+    user = user_serializer.load(user_dictionary, instance=user_to_update, partial=True)
+
+    user.save()
+    return user_serializer.jsonify(user)
+
+
+# TO-DO: Permissions
+@router.route("/users/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    user = UserModel.query.get(user_id)
+    user.remove()
+    return ""

@@ -36,6 +36,7 @@ def create_group():
     return group_serializer.jsonify(group)
 
 
+# TO-DO: Permissions
 @router.route("/groups/<int:group_id>", methods=["PUT"])
 def update_group(group_id):
     group_dictionary = request.json
@@ -49,6 +50,7 @@ def update_group(group_id):
     return group_serializer.jsonify(group)
 
 
+# TO-DO: Permissions
 @router.route("/groups/<int:group_id>", methods=["DELETE"])
 def delete_group(group_id):
     group = GroupModel.query.get(group_id)
