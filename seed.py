@@ -12,12 +12,26 @@ with app.app_context():
 
     print("Seeding the database...")
 
-    cbrett = UserModel(
+    admin = UserModel(
+    username="adminuser",
+    email="admin@harbornecommunitygroups.com",
+    password="P@ssword0!",
+    )
+    admin.save()
+
+    catherine = UserModel(
         username="cbrett",
         email="cbrett@geemail.com",
         password="P@ssword1!",
     )
-    cbrett.save()
+    catherine.save()
+
+    wendy = UserModel(
+        username="wjones",
+        email="wjones@geemail.com",
+        password="P@ssword2!",
+    )
+    wendy.save()
 
     harborne_walking_group = GroupModel(
         name="Harborne Walking Group",
@@ -26,7 +40,7 @@ with app.app_context():
         contact_name="Diane",
         contact_number="07010 100 100",
         full_desc="Come and join our friendly walking group! Every other Sunday we meet on the high street and then do a 5k walk, finishing where we started. We often have refreshments at a cafe afterwards. All are welcome!",
-        user_id=cbrett.id,
+        user_id=catherine.id,
     )
     harborne_walking_group.save()
 
