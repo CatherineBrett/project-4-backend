@@ -1,6 +1,7 @@
 # TO-DO: Get rid of any instances of print()
 
 from datetime import datetime, timezone, timedelta
+from http import HTTPStatus
 import jwt
 from flask import Blueprint, request
 from app import db
@@ -17,6 +18,15 @@ router = Blueprint("users", __name__)
 @router.route("/signup", methods=["POST"])
 def sign_up():
     user_dictionary = request.json
+
+    if user_dictionary["password"] != user_dictionary["password_confirmation"]:
+        return {
+            "errors": "Passwords no not match",
+            "messages": "Something went wrong",
+        }, HTTPStatus.UNPROCESSABLE_ENTITY
+
+    del user_dictionary["password_confirmation"]
+
     user = user_serializer.load(user_dictionary)
     user.save()
     return user_serializer.jsonify(user)
