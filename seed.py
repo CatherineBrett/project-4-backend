@@ -94,7 +94,7 @@ with app.app_context():
         brief_desc="Practise Italian with us",
         contact_name="Wendy",
         contact_number="07020 220 220",
-        full_desc="Every other Thursday we meet to practise our Italian. We members at all levels, from beginner to advanced - all are welcome at our supportive group.",
+        full_desc="Every other Thursday we meet to practise our Italian. We have members at all ability levels, from beginner to advanced - all are welcome at our supportive group.",
         user_id=wendy.id,
     )
     italian_conversation.save()
@@ -105,7 +105,7 @@ with app.app_context():
         brief_desc="Enthusiastic gardening group",
         contact_name="George",
         contact_number="07030 330 330",
-        full_desc="At Golden Gardeners we help each other to look after our gardens. As the saying goes, many hands make light work. And there's plenty of time for tea cake, too!",
+        full_desc="At Golden Gardeners we help each other to look after our gardens. As the saying goes, many hands make light work. And there's plenty of time for tea and cake, too!",
         user_id=george.id,
     )
     golden_gardeners.save()
