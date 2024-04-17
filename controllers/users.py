@@ -7,6 +7,7 @@ from flask import Blueprint, request
 from app import db
 from config.environment import SECRET
 from models.user import UserModel
+from middleware.secure_route import secure_route
 from serializers.user import UserSerializer
 
 
@@ -58,6 +59,7 @@ def log_in():
 
 # TO-DO: Permissions
 @router.route("/users/<int:user_id>", methods=["PUT"])
+@secure_route
 def update_user(user_id):
     user_dictionary = request.json
     user_to_update = UserModel.query.get(user_id)
@@ -70,6 +72,7 @@ def update_user(user_id):
 
 # TO-DO: Permissions
 @router.route("/users/<int:user_id>", methods=["DELETE"])
+@secure_route
 def delete_user(user_id):
     user = UserModel.query.get(user_id)
     user.remove()

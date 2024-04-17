@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from models.group import GroupModel
-from models.category import CategoryModel
+from middleware.secure_route import secure_route
 from serializers.group import GroupSerializer
 from serializers.category import CategorySerializer
 from serializers.group_category import GroupCategorySerializer
@@ -26,6 +26,7 @@ def get_single_group(group_id):
 
 
 @router.route("/groups", methods=["POST"])
+@secure_route
 def create_group():
     group_dictionary = request.json
     # TO-DO: update this hardcoded user ID once you've done your secure route:
@@ -38,6 +39,7 @@ def create_group():
 
 # TO-DO: Permissions
 @router.route("/groups/<int:group_id>", methods=["PUT"])
+@secure_route
 def update_group(group_id):
     group_dictionary = request.json
     group_to_update = GroupModel.query.get(group_id)
@@ -52,6 +54,7 @@ def update_group(group_id):
 
 # TO-DO: Permissions
 @router.route("/groups/<int:group_id>", methods=["DELETE"])
+@secure_route
 def delete_group(group_id):
     group = GroupModel.query.get(group_id)
     group.remove()
