@@ -17,6 +17,12 @@ user_serializer = UserSerializer()
 router = Blueprint("users", __name__)
 
 
+@router.route("/user", methods=["GET"])
+@secure_route
+def get_current_user():
+    return user_serializer.jsonify(g.current_user)
+
+
 @router.route("/signup", methods=["POST"])
 def sign_up():
 
