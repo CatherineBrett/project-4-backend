@@ -1,5 +1,8 @@
-from flask import Blueprint, request
+from http import HTTPStatus
+from marshmallow.exceptions import ValidationError
+from flask import Blueprint, request, g
 from models.group import GroupModel
+from app import db
 from middleware.secure_route import secure_route
 from serializers.group import GroupSerializer
 from serializers.category import CategorySerializer
@@ -15,47 +18,88 @@ router = Blueprint("groups", __name__)
 
 @router.route("/groups", methods=["GET"])
 def get_all_groups():
-    groups = GroupModel.query.all()
+    groups = db.session.query(GroupModel).all()
     return group_serializer.jsonify(groups, many=True)
 
 
 @router.route("/groups/<int:group_id>", methods=["GET"])
 def get_single_group(group_id):
-    group = GroupModel.query.get(group_id)
+    group = db.session.query(GroupModel).get(group_id)
+
+    if not group:
+        return {"message": "Group not found."}, HTTPStatus.NOT_FOUND
+
     return group_serializer.jsonify(group)
 
 
+# TO-DO: figure out what to do about categories
 @router.route("/groups", methods=["POST"])
 @secure_route
 def create_group():
     group_dictionary = request.json
-    # TO-DO: update this hardcoded user ID once you've done your secure route:
-    group_dictionary["user_id"] = 1
-    # TO-DO: figure out what to do about categories
-    group = group_serializer.load(group_dictionary)
-    group.save()
-    return group_serializer.jsonify(group)
+
+    try:
+        group_dictionary["user_id"] = g.current_user.id
+        group_model = group_serializer.load(group_dictionary)
+        group_model.save()
+        return group_serializer.jsonify(group_model)
+
+    except ValidationError as e:
+        return {
+            "errors": e.messages,
+            "message": "Something went wrong",
+        }, HTTPStatus.UNPROCESSABLE_ENTITY
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-# TO-DO: Permissions
 @router.route("/groups/<int:group_id>", methods=["PUT"])
 @secure_route
 def update_group(group_id):
-    group_dictionary = request.json
-    group_to_update = GroupModel.query.get(group_id)
 
-    group = group_serializer.load(
-        group_dictionary, instance=group_to_update, partial=True
-    )
+    try:
+        group_to_update = db.session.query(GroupModel).get(group_id)
 
-    group.save()
-    return group_serializer.jsonify(group)
+        if not group_to_update:
+            return {"message": "Group not found"}, HTTPStatus.NOT_FOUND
+
+        if group_to_update.user_id != g.current_user.id:
+            return {
+                "message": "You are not authorised to edit this group"
+            }, HTTPStatus.UNAUTHORIZED
+
+        group_dictionary = request.json
+
+        group = group_serializer.load(
+            group_dictionary, instance=group_to_update, partial=True
+        )
+
+        group.save()
+        return group_serializer.jsonify(group)
+
+    except ValidationError as e:
+        return {
+            "errors": e.messages,
+            "message": "Something went wrong",
+        }, HTTPStatus.UNPROCESSABLE_ENTITY
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-# TO-DO: Permissions
 @router.route("/groups/<int:group_id>", methods=["DELETE"])
 @secure_route
 def delete_group(group_id):
-    group = GroupModel.query.get(group_id)
-    group.remove()
-    return ""
+    group_to_delete = db.session.query(GroupModel).get(group_id)
+
+    if not group_to_delete:
+        return {"message": "Group not found"}, HTTPStatus.NOT_FOUND
+
+    if group_to_delete.user_id != g.current_user.id:
+        return {
+            "message": "You are not authorised to delete this group"
+        }, HTTPStatus.UNAUTHORIZED
+
+    group_to_delete.remove()
+    return "", HTTPStatus.NO_CONTENT
