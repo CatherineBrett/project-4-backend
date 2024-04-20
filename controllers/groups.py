@@ -2,6 +2,8 @@ from http import HTTPStatus
 from marshmallow.exceptions import ValidationError
 from flask import Blueprint, request, g
 from models.group import GroupModel
+from models.category import CategoryModel
+from models.group_category import GroupCategoryModel
 from app import db
 from middleware.secure_route import secure_route
 from serializers.group import GroupSerializer
@@ -32,16 +34,25 @@ def get_single_group(group_id):
     return group_serializer.jsonify(group)
 
 
-# TO-DO: figure out what to do about categories
 @router.route("/groups", methods=["POST"])
 @secure_route
 def create_group():
     group_dictionary = request.json
 
     try:
+        categories_list = group_dictionary["categories"]
+        del group_dictionary["categories"]
         group_dictionary["user_id"] = g.current_user.id
         group_model = group_serializer.load(group_dictionary)
         group_model.save()
+
+        for category in categories_list:
+            req_category = (
+                db.session.query(CategoryModel).filter_by(name=category).first()
+            )
+            group_category_model = GroupCategoryModel(group_id=group_model.id, category_id=req_category.id)
+            group_category_model.save()
+
         return group_serializer.jsonify(group_model)
 
     except ValidationError as e:
