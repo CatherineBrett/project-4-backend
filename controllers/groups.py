@@ -50,7 +50,9 @@ def create_group():
             req_category = (
                 db.session.query(CategoryModel).filter_by(name=category).first()
             )
-            group_category_model = GroupCategoryModel(group_id=group_model.id, category_id=req_category.id)
+            group_category_model = GroupCategoryModel(
+                group_id=group_model.id, category_id=req_category.id
+            )
             group_category_model.save()
 
         return group_serializer.jsonify(group_model)
@@ -82,11 +84,29 @@ def update_group(group_id):
 
         group_dictionary = request.json
 
+        categories_list = group_dictionary["categories"]
+        del group_dictionary["categories"]
+
         group = group_serializer.load(
             group_dictionary, instance=group_to_update, partial=True
         )
 
         group.save()
+
+        original_categories = db.session.query(GroupCategoryModel).filter_by(
+            group_id=group_to_update.id
+        )
+        original_categories.delete()
+
+        for category in categories_list:
+            req_category = (
+                db.session.query(CategoryModel).filter_by(name=category).first()
+            )
+            group_category_model = GroupCategoryModel(
+                group_id=group_to_update.id, category_id=req_category.id
+            )
+            group_category_model.save()
+
         return group_serializer.jsonify(group)
 
     except ValidationError as e:
