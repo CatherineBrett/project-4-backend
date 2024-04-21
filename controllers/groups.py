@@ -122,15 +122,26 @@ def update_group(group_id):
 @router.route("/groups/<int:group_id>", methods=["DELETE"])
 @secure_route
 def delete_group(group_id):
-    group_to_delete = db.session.query(GroupModel).get(group_id)
 
-    if not group_to_delete:
-        return {"message": "Group not found"}, HTTPStatus.NOT_FOUND
+    try:
+        group_to_delete = db.session.query(GroupModel).get(group_id)
 
-    if group_to_delete.user_id != g.current_user.id:
-        return {
-            "message": "You are not authorised to delete this group"
-        }, HTTPStatus.UNAUTHORIZED
+        if not group_to_delete:
+            return {"message": "Group not found"}, HTTPStatus.NOT_FOUND
 
-    group_to_delete.remove()
-    return "", HTTPStatus.NO_CONTENT
+        if group_to_delete.user_id != g.current_user.id:
+            return {
+                "message": "You are not authorised to delete this group"
+            }, HTTPStatus.UNAUTHORIZED
+
+        groups_categories_to_delete = db.session.query(GroupCategoryModel).filter_by(
+            group_id=group_to_delete.id
+        )
+        groups_categories_to_delete.delete()
+
+        group_to_delete.remove()
+        return "", HTTPStatus.NO_CONTENT
+
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR

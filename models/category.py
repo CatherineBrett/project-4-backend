@@ -9,5 +9,4 @@ class CategoryModel(db.Model, BaseModel):
     name = db.Column(db.Text, nullable=False, unique=True)
 
     groups = db.relationship(
-        "GroupCategoryModel", back_populates="category", cascade="all, delete"
-    )
+        "GroupCategoryModel", back_populates="category")

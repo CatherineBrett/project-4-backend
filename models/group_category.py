@@ -11,8 +11,6 @@ class GroupCategoryModel(db.Model, BaseModel):
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
 
     group = db.relationship(
-        "GroupModel", back_populates="categories", cascade="all, delete"
-    )
+        "GroupModel", back_populates="categories")
     category = db.relationship(
-        "CategoryModel", back_populates="groups", cascade="all, delete"
-    )
+        "CategoryModel", back_populates="groups")
