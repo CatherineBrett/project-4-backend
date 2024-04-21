@@ -129,18 +129,21 @@ def delete_group(group_id):
         if not group_to_delete:
             return {"message": "Group not found"}, HTTPStatus.NOT_FOUND
 
-        if group_to_delete.user_id != g.current_user.id:
-            return {
-                "message": "You are not authorised to delete this group"
-            }, HTTPStatus.UNAUTHORIZED
+        if (
+            group_to_delete.user_id == g.current_user.id
+            or g.current_user.username == "adminuser"
+        ):
+            groups_categories_to_delete = db.session.query(
+                GroupCategoryModel
+            ).filter_by(group_id=group_to_delete.id)
+            groups_categories_to_delete.delete()
 
-        groups_categories_to_delete = db.session.query(GroupCategoryModel).filter_by(
-            group_id=group_to_delete.id
-        )
-        groups_categories_to_delete.delete()
+            group_to_delete.remove()
+            return "", HTTPStatus.NO_CONTENT
 
-        group_to_delete.remove()
-        return "", HTTPStatus.NO_CONTENT
+        return {
+            "message": "You are not authorised to delete this group"
+        }, HTTPStatus.UNAUTHORIZED
 
     except Exception as e:
         print(e)
