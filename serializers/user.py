@@ -18,4 +18,4 @@ class UserSerializer(marsh.SQLAlchemyAutoSchema):
     class Meta:
         model = UserModel
         load_instance = True
-        load_only = ("email", "password", "password_hash")
+        load_only = ("password", "password_hash")

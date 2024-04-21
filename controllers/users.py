@@ -8,6 +8,8 @@ from marshmallow.exceptions import ValidationError
 from app import db
 from config.environment import SECRET
 from models.user import UserModel
+from models.group import GroupModel
+from models.group_category import GroupCategoryModel
 from middleware.secure_route import secure_route
 from serializers.user import UserSerializer
 
@@ -118,20 +120,28 @@ def update_user(user_id):
 @secure_route
 def delete_user(user_id):
 
-    user_to_delete = db.session.query(UserModel).get(user_id)
-    print("user_to_delete is: ", user_to_delete)
-    print("user_to_delete.id is: ", user_to_delete.id)
-    print("g.current_user.id is: ", g.current_user.id)
+    try:
+        user_to_delete = db.session.query(UserModel).get(user_id)
 
-    if not user_to_delete:
-        return {"message": "User not found"}, HTTPStatus.NOT_FOUND
+        if not user_to_delete:
+            return {"message": "User not found"}, HTTPStatus.NOT_FOUND      
 
-    if user_to_delete.id != g.current_user.id:
-        return {
-            "message": "You are not authorised to delete this account"
-        }, HTTPStatus.UNAUTHORIZED
+        if user_to_delete.id != g.current_user.id:
+            return {
+                "message": "You are not authorised to delete this account"
+            }, HTTPStatus.UNAUTHORIZED
+        
+        groups_to_delete = db.session.query(GroupModel).filter_by(user_id=user_to_delete.id)
 
-    print("hello")
-    user_to_delete.remove()
-    print("world")
-    return "", HTTPStatus.NO_CONTENT
+        for group in groups_to_delete:
+            groups_categories_to_delete = db.session.query(GroupCategoryModel).filter_by(group_id=group.id)
+            groups_categories_to_delete.delete()
+        
+        groups_to_delete.delete()
+
+        user_to_delete.remove()
+        return "", HTTPStatus.NO_CONTENT
+
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
