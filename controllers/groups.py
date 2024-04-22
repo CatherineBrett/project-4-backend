@@ -95,6 +95,11 @@ def update_group(group_id):
         categories_list = group_dictionary["categories"]
         del group_dictionary["categories"]
 
+        if len(categories_list) == 0:
+            return {
+                "message": "Please check you have completed all questions and try again"
+            }, HTTPStatus.UNPROCESSABLE_ENTITY
+
         group = group_serializer.load(
             group_dictionary, instance=group_to_update, partial=True
         )
