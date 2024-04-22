@@ -55,28 +55,31 @@ def sign_up():
 
 @router.route("/login", methods=["POST"])
 def log_in():
+        
+    try:
+        user_dictionary = request.json
 
-    user_dictionary = request.json
+        user = db.session.query(UserModel).filter_by(email=user_dictionary["email"]).first()
 
-    user = db.session.query(UserModel).filter_by(email=user_dictionary["email"]).first()
+        if not user:
+            return {"message": "Login failed. Please try again."}, HTTPStatus.UNAUTHORIZED
 
-    if not user:
-        print("Email doesn't exist on the database.")
-        return {"message": "Login failed. Please try again."}
+        if not user.validate_password(user_dictionary["password"]):
+            return {"message": "Login failed. Please try again."}, HTTPStatus.UNAUTHORIZED
 
-    if not user.validate_password(user_dictionary["password"]):
-        print("Wrong password.")
-        return {"message": "Login failed. Please try again."}
+        payload = {
+            "exp": datetime.now(timezone.utc) + timedelta(days=1),
+            "iat": datetime.now(timezone.utc),
+            "sub": user.id,
+        }
 
-    payload = {
-        "exp": datetime.now(timezone.utc) + timedelta(days=1),
-        "iat": datetime.now(timezone.utc),
-        "sub": user.id,
-    }
+        token = jwt.encode(payload, SECRET, algorithm="HS256")
 
-    token = jwt.encode(payload, SECRET, algorithm="HS256")
-
-    return {"message": "Login successful!", "token": token}
+        return {"message": "Login successful!", "token": token}
+    
+    except Exception as e:
+        print(e)
+        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @router.route("/users/<int:user_id>", methods=["PUT"])
