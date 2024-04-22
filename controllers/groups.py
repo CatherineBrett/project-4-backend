@@ -42,6 +42,12 @@ def create_group():
     try:
         categories_list = group_dictionary["categories"]
         del group_dictionary["categories"]
+
+        if len(categories_list) == 0:
+            return {
+                "message": "Please check you have completed all questions and try again"
+            }, HTTPStatus.UNPROCESSABLE_ENTITY
+
         group_dictionary["user_id"] = g.current_user.id
         group_model = group_serializer.load(group_dictionary)
         group_model.save()
@@ -60,11 +66,13 @@ def create_group():
     except ValidationError as e:
         return {
             "errors": e.messages,
-            "message": "Something went wrong",
+            "message": "Something went wrong - please check your form and try again",
         }, HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception as e:
         print(e)
-        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        return {
+            "message": "Something went wrong - please try again"
+        }, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @router.route("/groups/<int:group_id>", methods=["PUT"])
