@@ -1,5 +1,3 @@
-# TO-DO: Get rid of any instances of print()
-
 from datetime import datetime, timezone, timedelta
 from http import HTTPStatus
 import jwt
@@ -34,38 +32,57 @@ def sign_up():
         if user_dictionary["password"] != user_dictionary["password_confirmation"]:
             return {
                 "errors": "Passwords do not match",
-                "messages": "Something went wrong",
+                "message": "Passwords do not match",
             }, HTTPStatus.UNPROCESSABLE_ENTITY
 
         del user_dictionary["password_confirmation"]
 
+        username_taken = (
+            db.session.query(UserModel)
+            .filter_by(username=user_dictionary["username"])
+            .first()
+        )
+
+        if username_taken:
+            return {"message": "Username not available"}, HTTPStatus.CONFLICT
+
         user_model = user_serializer.load(user_dictionary)
+
         user_model.save()
         return user_serializer.jsonify(user_model)
 
     except ValidationError as e:
         return {
             "errors": e.messages,
-            "message": "Something went wrong",
+            "message": "Something went wrong - please try again",
         }, HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception as e:
-        print(e)
-        return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        return {
+            "message": "Something went wrong - please try again"
+        }, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @router.route("/login", methods=["POST"])
 def log_in():
-        
+
     try:
         user_dictionary = request.json
 
-        user = db.session.query(UserModel).filter_by(email=user_dictionary["email"]).first()
+        user = (
+            db.session.query(UserModel)
+            .filter_by(email=user_dictionary["email"])
+            .first()
+        )
 
         if not user:
-            return {"message": "Login failed. Please try again."}, HTTPStatus.UNAUTHORIZED
+            return {
+                "message": "Login failed. Please try again."
+            }, HTTPStatus.UNAUTHORIZED
 
         if not user.validate_password(user_dictionary["password"]):
-            return {"message": "Login failed. Please try again."}, HTTPStatus.UNAUTHORIZED
+            return {
+                "message": "Login failed. Please try again."
+            }, HTTPStatus.UNAUTHORIZED
 
         payload = {
             "exp": datetime.now(timezone.utc) + timedelta(days=1),
@@ -76,9 +93,8 @@ def log_in():
         token = jwt.encode(payload, SECRET, algorithm="HS256")
 
         return {"message": "Login successful!", "token": token}
-    
+
     except Exception as e:
-        print(e)
         return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
@@ -88,8 +104,6 @@ def update_user(user_id):
 
     try:
         user_to_update = db.session.query(UserModel).get(user_id)
-        print("user_to_update.id is: ", user_to_update.id)
-        print("g.current_user.id is: ", g.current_user.id)
 
         if not user_to_update:
             return {"message": "User not found"}, HTTPStatus.NOT_FOUND
@@ -115,7 +129,6 @@ def update_user(user_id):
             "message": "Something went wrong",
         }, HTTPStatus.UNPROCESSABLE_ENTITY
     except Exception as e:
-        print(e)
         return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
@@ -127,24 +140,27 @@ def delete_user(user_id):
         user_to_delete = db.session.query(UserModel).get(user_id)
 
         if not user_to_delete:
-            return {"message": "User not found"}, HTTPStatus.NOT_FOUND      
+            return {"message": "User not found"}, HTTPStatus.NOT_FOUND
 
         if user_to_delete.id != g.current_user.id:
             return {
                 "message": "You are not authorised to delete this account"
             }, HTTPStatus.UNAUTHORIZED
-        
-        groups_to_delete = db.session.query(GroupModel).filter_by(user_id=user_to_delete.id)
+
+        groups_to_delete = db.session.query(GroupModel).filter_by(
+            user_id=user_to_delete.id
+        )
 
         for group in groups_to_delete:
-            groups_categories_to_delete = db.session.query(GroupCategoryModel).filter_by(group_id=group.id)
+            groups_categories_to_delete = db.session.query(
+                GroupCategoryModel
+            ).filter_by(group_id=group.id)
             groups_categories_to_delete.delete()
-        
+
         groups_to_delete.delete()
 
         user_to_delete.remove()
         return "", HTTPStatus.NO_CONTENT
 
     except Exception as e:
-        print(e)
         return {"message": "Something went wrong"}, HTTPStatus.INTERNAL_SERVER_ERROR
